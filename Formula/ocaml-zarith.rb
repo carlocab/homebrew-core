@@ -4,7 +4,7 @@ class OcamlZarith < Formula
   url "https://github.com/ocaml/Zarith/archive/release-1.11.tar.gz"
   sha256 "f996af120a10fd06a8272ae99b7affd57cef49c57a3a596e2f589147dd183684"
   license "LGPL-2.0-only"
-  revision 1
+  revision 2
 
   bottle do
     sha256 cellar: :any, arm64_big_sur: "54144ec55af567f0b567f945dac178de3d20ce3dc211b73bbaee75776cd24603"
