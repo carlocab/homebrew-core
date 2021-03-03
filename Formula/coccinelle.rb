@@ -23,6 +23,7 @@ class Coccinelle < Formula
   depends_on "automake" => :build
   depends_on "hevea" => :build
   depends_on "opam" => :build
+  depends_on "ocaml-stdcompat" => :build
   depends_on "ocaml"
 
   def install
