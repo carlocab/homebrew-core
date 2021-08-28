@@ -5,6 +5,7 @@ class Coreutils < Formula
   mirror "https://ftpmirror.gnu.org/coreutils/coreutils-8.32.tar.xz"
   sha256 "4458d8de7849df44ccab15e16b1548b285224dbba5f08fac070c1c0e0bcc4cfa"
   license "GPL-3.0-or-later"
+  revision 1
 
   bottle do
     rebuild 2
@@ -27,6 +28,7 @@ class Coreutils < Formula
     depends_on "xz" => :build
   end
 
+  depends_on "gmp"
   uses_from_macos "gperf" => :build
 
   on_linux do
@@ -49,7 +51,7 @@ class Coreutils < Formula
     args = %W[
       --prefix=#{prefix}
       --program-prefix=g
-      --without-gmp
+      --with-gmp
       --without-selinux
     ]
 
@@ -68,12 +70,9 @@ class Coreutils < Formula
 
     # Symlink non-conflicting binaries
     no_conflict = %w[
-      b2sum base32 chcon hostid md5sum nproc numfmt pinky ptx realpath runcon
-      sha1sum sha224sum sha256sum sha384sum sha512sum shred shuf stdbuf tac timeout truncate
+      b2sum base32 basenc chcon dir dircolors factor hostid md5sum nproc numfmt pinky ptx realpath runcon
+      sha1sum sha224sum sha256sum sha384sum sha512sum shred shuf stdbuf tac timeout truncate vdir
     ]
-    on_linux do
-      no_conflict += ["dir", "dircolors", "vdir"]
-    end
     no_conflict.each do |cmd|
       bin.install_symlink "g#{cmd}" => cmd
       man1.install_symlink "g#{cmd}.1" => "#{cmd}.1"
