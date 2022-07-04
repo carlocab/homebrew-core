@@ -22,24 +22,8 @@ class Lua < Formula
 
   uses_from_macos "unzip" => :build
 
-  on_macos do
-    # Be sure to build a dylib, or else runtime modules will pull in another static copy of liblua = crashy
-    # See: https://github.com/Homebrew/legacy-homebrew/pull/5043
-    patch do
-      url "https://raw.githubusercontent.com/Homebrew/formula-patches/11c8360432f471f74a9b2d76e012e3b36f30b871/lua/lua-dylib.patch"
-      sha256 "a39e2ae1066f680e5c8bf1749fe09b0e33a0215c31972b133a73d43b00bf29dc"
-    end
-  end
-
   on_linux do
     depends_on "readline"
-
-    # Add shared library for linux. Equivalent to the mac patch above.
-    # Inspired from https://www.linuxfromscratch.org/blfs/view/cvs/general/lua.html
-    patch do
-      url "https://raw.githubusercontent.com/Homebrew/formula-patches/0dcd11880c7d63eb395105a5cdddc1ca05b40f4a/lua/lua-so.patch"
-      sha256 "522dc63a0c1d87bf127c992dfdf73a9267890fd01a5a17e2bcf06f7eb2782942"
-    end
   end
 
   # Fix crash issue in luac when invoked with multiple files.
@@ -47,22 +31,6 @@ class Lua < Formula
   patch :DATA
 
   def install
-    if OS.linux?
-      # Fix: /usr/bin/ld: lapi.o: relocation R_X86_64_32 against `luaO_nilobject_' can not be used
-      # when making a shared object; recompile with -fPIC
-      # See https://www.linuxfromscratch.org/blfs/view/cvs/general/lua.html
-      ENV.append_to_cflags "-fPIC"
-    end
-
-    # Substitute formula prefix in `src/Makefile` for install name (dylib ID).
-    # Use our CC/CFLAGS to compile.
-    inreplace "src/Makefile" do |s|
-      s.gsub! "@OPT_LIB@", opt_lib if OS.mac?
-      s.remove_make_var! "CC"
-      s.change_make_var! "MYCFLAGS", ENV.cflags
-      s.change_make_var! "MYLDFLAGS", ENV.ldflags
-    end
-
     # Fix path in the config header
     inreplace "src/luaconf.h", "/usr/local", HOMEBREW_PREFIX
 
@@ -72,8 +40,55 @@ class Lua < Formula
       "linux-readline"
     end
 
-    system "make", os, "INSTALL_TOP=#{prefix}"
-    system "make", "install", "INSTALL_TOP=#{prefix}"
+    # Be sure to build a dylib, or else runtime modules will pull in another static copy of liblua = crashy
+    # See: https://github.com/Homebrew/legacy-homebrew/pull/5043
+    liblua = shared_library("liblua", version.major_minor.to_s)
+    soflags = if OS.mac?
+      %W[
+        -dynamiclib
+        -compatibility_version #{version.major_minor}
+        -current_version #{version}
+        -install_name #{lib/liblua}
+      ]
+    else
+      %W[
+        -shared
+        -Wl,-soname,#{liblua}
+        -ldl
+        -lm
+      ]
+    end
+
+    # Fix: /usr/bin/ld: lapi.o: relocation R_X86_64_32 against `luaO_nilobject_' can not be used
+    # when making a shared object; recompile with -fPIC
+    # See https://www.linuxfromscratch.org/blfs/view/cvs/general/lua.html
+    ENV.append_to_cflags "-fPIC"
+
+    so_build_args = [
+      "MYCFLAGS=#{ENV.cflags}",
+      "MYLDFLAGS=#{ENV.ldflags}",
+      "LUA_A=#{liblua}",
+      "AR=#{ENV.cc} #{soflags.join(" ")} -o",
+      "RANLIB=true",
+    ]
+
+    install_args = [
+      "INSTALL_TOP=#{prefix}",
+      "INSTALL_INC=#{include}/lua",
+      "INSTALL_MAN=#{man1}",
+      "TO_LIB=#{liblua}",
+    ]
+
+    system "make", os, *so_build_args
+    system "make", "install", *install_args
+    lib.install_symlink liblua => shared_library("liblua", version.to_s)
+    lib.install_symlink liblua => shared_library("liblua")
+
+    # Build and install the static library.
+    system "make", "clean"
+    ENV.remove_from_cflags "-fPIC"
+    system "make", os, "MYCFLAGS=#{ENV.cflags}", "MYLDFLAGS=#{ENV.ldflags}"
+    lib.install "src/liblua.a"
 
     # We ship our own pkg-config file as Lua no longer provide them upstream.
     libs = %w[-llua -lm]
@@ -105,12 +120,10 @@ class Lua < Formula
     bin.install_symlink "lua" => "lua-#{version.major_minor}"
     bin.install_symlink "luac" => "luac#{version.major_minor}"
     bin.install_symlink "luac" => "luac-#{version.major_minor}"
-    (include/"lua#{version.major_minor}").install_symlink Dir[include/"lua/*"]
+    (include/"lua#{version.major_minor}").install_symlink (include/"lua").children
     lib.install_symlink shared_library("liblua", version.major_minor) => shared_library("liblua#{version.major_minor}")
     (lib/"pkgconfig").install_symlink "lua.pc" => "lua#{version.major_minor}.pc"
     (lib/"pkgconfig").install_symlink "lua.pc" => "lua-#{version.major_minor}.pc"
-
-    lib.install Dir[shared_library("src/liblua", "*")] if OS.linux?
   end
 
   def caveats
