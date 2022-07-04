@@ -24,6 +24,13 @@ class Lua < Formula
 
   on_linux do
     depends_on "readline"
+
+    # Add shared library for linux.
+    # Inspired from https://www.linuxfromscratch.org/blfs/view/cvs/general/lua.html
+    patch do
+      url "https://raw.githubusercontent.com/Homebrew/formula-patches/0dcd11880c7d63eb395105a5cdddc1ca05b40f4a/lua/lua-so.patch"
+      sha256 "522dc63a0c1d87bf127c992dfdf73a9267890fd01a5a17e2bcf06f7eb2782942"
+    end
   end
 
   # Fix crash issue in luac when invoked with multiple files.
@@ -37,58 +44,48 @@ class Lua < Formula
     os = if OS.mac?
       "macosx"
     else
+      # Fix: /usr/bin/ld: lapi.o: relocation R_X86_64_32 against `luaO_nilobject_' can not be used
+      # when making a shared object; recompile with -fPIC
+      # See https://www.linuxfromscratch.org/blfs/view/cvs/general/lua.html
+      ENV.append_to_cflags "-fPIC"
+
       "linux-readline"
     end
 
     # Be sure to build a dylib, or else runtime modules will pull in another static copy of liblua = crashy
     # See: https://github.com/Homebrew/legacy-homebrew/pull/5043
     liblua = shared_library("liblua", version.major_minor.to_s)
-    soflags = if OS.mac?
-      %W[
-        -dynamiclib
-        -compatibility_version #{version.major_minor}
-        -current_version #{version}
-        -install_name #{lib/liblua}
-      ]
-    else
-      %W[
-        -shared
-        -Wl,-soname,#{liblua}
-        -ldl
-        -lm
-      ]
-    end
-
-    # Fix: /usr/bin/ld: lapi.o: relocation R_X86_64_32 against `luaO_nilobject_' can not be used
-    # when making a shared object; recompile with -fPIC
-    # See https://www.linuxfromscratch.org/blfs/view/cvs/general/lua.html
-    ENV.append_to_cflags "-fPIC"
-
-    so_build_args = [
-      "MYCFLAGS=#{ENV.cflags}",
-      "MYLDFLAGS=#{ENV.ldflags}",
-      "LUA_A=#{liblua}",
-      "AR=#{ENV.cc} #{soflags.join(" ")} -o",
-      "RANLIB=true",
+    soflags = %W[
+      -dynamiclib
+      -compatibility_version #{version.major_minor}
+      -current_version #{version}
+      -install_name #{lib/liblua}
     ]
+
+    base_args = build_args = ["MYCFLAGS=#{ENV.cflags}", "MYLDFLAGS=#{ENV.ldflags}"]
+    build_args += ["LUA_A=#{liblua}", "AR=#{ENV.cc} #{soflags.join(" ")} -o", "RANLIB=true"] if OS.mac?
 
     install_args = [
       "INSTALL_TOP=#{prefix}",
       "INSTALL_INC=#{include}/lua",
       "INSTALL_MAN=#{man1}",
-      "TO_LIB=#{liblua}",
     ]
+    install_args << "TO_LIB=#{liblua}" if OS.mac?
 
-    system "make", os, *so_build_args
+    system "make", os, *build_args
     system "make", "install", *install_args
-    lib.install_symlink liblua => shared_library("liblua", version.to_s)
-    lib.install_symlink liblua => shared_library("liblua")
 
-    # Build and install the static library.
-    system "make", "clean"
-    ENV.remove_from_cflags "-fPIC"
-    system "make", os, "MYCFLAGS=#{ENV.cflags}", "MYLDFLAGS=#{ENV.ldflags}"
-    lib.install "src/liblua.a"
+    if OS.mac?
+      lib.install_symlink liblua => shared_library("liblua", version.to_s)
+      lib.install_symlink liblua => shared_library("liblua")
+
+      # Build and install the static library.
+      system "make", "clean"
+      system "make", os, *base_args
+      lib.install "src/liblua.a"
+    else
+      lib.install buildpath.glob(shared_library("src/liblua", "*"))
+    end
 
     # We ship our own pkg-config file as Lua no longer provide them upstream.
     libs = %w[-llua -lm]
