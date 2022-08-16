@@ -4,6 +4,7 @@ class Liboqs < Formula
   url "https://github.com/open-quantum-safe/liboqs/archive/0.7.1.tar.gz"
   sha256 "c8a1ffcfd4facc90916557c0efae9a28c46e803b088d0cb32ee7b0b010555d3a"
   license "MIT"
+  head "https://github.com/open-quantum-safe/liboqs.git", branch: "main"
 
   livecheck do
     url :stable
@@ -20,7 +21,6 @@ class Liboqs < Formula
   end
 
   depends_on "cmake" => :build
-  depends_on "doxygen" => :build
   depends_on "ninja" => :build
   depends_on "openssl@1.1"
 
@@ -31,17 +31,29 @@ class Liboqs < Formula
   fails_with gcc: "5"
 
   def install
-    mkdir "build" do
-      system "cmake", "..", *std_cmake_args, "-GNinja", "-DBUILD_SHARED_LIBS=ON"
-      system "ninja"
-      system "ninja", "install"
+    # FIXME: The runtime_cpu_detection audit fails on Catalina, even if we don't use it there.
+    optflags = if MacOS.version >= :big_sur || OS.linux?
+      ENV.runtime_cpu_detection
+      ["-DOQS_DIST_BUILD=ON"] # enable runtime cpu detection
+    else
+      # Setting `OQS_DIST_BUILD=ON` fails on Catalina.
+      ["-DOQS_DIST_BUILD=OFF", "-DOQS_OPT_TARGET=#{Hardware.oldest_cpu}"]
     end
-    pkgshare.install "tests"
+
+    system "cmake", "-S", ".", "-B", "build",
+                    "-G", "Ninja",
+                    "-DBUILD_SHARED_LIBS=ON",
+                    "-DOQS_USE_OPENSSL=ON",
+                    "-DOPENSSL_ROOT_DIR=#{Formula["openssl@1.1"].opt_prefix}",
+                    "-DCMAKE_INSTALL_RPATH=#{rpath}", # Make sure test executables have the right RPATHs
+                    "-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON", # Avoid including build directory in RPATHs
+                    *optflags, *std_cmake_args
+    system "cmake", "--build", "build"
+    system "cmake", "--install", "build"
+    libexec.install (buildpath/"build/tests").children.select(&:executable?)
   end
 
   test do
-    cp pkgshare/"tests/example_kem.c", "test.c"
-    system ENV.cc, "-I#{include}", "-L#{lib}", "-loqs", "-o", "test", "test.c"
-    assert_match "operations completed", shell_output("./test")
+    assert_match "operations completed", shell_output(libexec/"example_kem")
   end
 end
