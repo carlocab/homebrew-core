@@ -20,8 +20,6 @@ class Apr < Formula
 
   depends_on "autoconf@2.69" => :build
 
-  uses_from_macos "libxcrypt"
-
   on_linux do
     depends_on "util-linux"
   end
