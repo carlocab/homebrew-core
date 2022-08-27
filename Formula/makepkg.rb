@@ -1,11 +1,11 @@
 class Makepkg < Formula
   desc "Compile and build packages suitable for installation with pacman"
   homepage "https://wiki.archlinux.org/index.php/makepkg"
-  url "https://git.archlinux.org/pacman.git",
-      tag:      "v5.0.2",
-      revision: "0c633c27eaeab2a9d30efb01199579896ccf63c9"
+  url "https://gitlab.archlinux.org/pacman/pacman.git",
+      tag:      "v6.0.1",
+      revision: "0a6fecd07271a54d9009ea7204c0e6288a44212b"
   license "GPL-2.0"
-  head "https://git.archlinux.org/pacman.git", branch: "master"
+  head "https://gitlab.archlinux.org/pacman/pacman.git", branch: "master"
 
   bottle do
     rebuild 2
@@ -13,8 +13,6 @@ class Makepkg < Formula
     sha256 mojave:      "b6606a63e0727072c1016ffa8b60db28de0de67d3b5d3f495aa8d0728b7325c9"
     sha256 high_sierra: "c8f2f6999669c56b5e40e2608ad1e0adfe2c8eb73f8cef959a229856d21da6ed"
   end
-
-  disable! date: "2022-03-28", because: "depends on fakeroot which does not build"
 
   depends_on "asciidoc" => :build
   depends_on "autoconf" => :build
