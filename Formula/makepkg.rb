@@ -15,10 +15,9 @@ class Makepkg < Formula
   end
 
   depends_on "asciidoc" => :build
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
   depends_on "docbook-xsl" => :build
-  depends_on "libtool" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "bash"
   depends_on "fakeroot"
@@ -32,12 +31,9 @@ class Makepkg < Formula
   def install
     ENV["XML_CATALOG_FILES"] = etc/"xml/catalog"
 
-    system "./autogen.sh"
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}",
-                          "--sysconfdir=#{etc}",
-                          "--localstatedir=#{var}"
-    system "make", "install"
+    system "meson", "setup", "build", "-Dmakepkg-template-dir=#{share}/makepkg-template", *std_meson_args
+    system "meson", "compile", "-C", "build", "--verbose"
+    system "meson", "install", "-C", "build"
   end
 
   test do
