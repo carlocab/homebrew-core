@@ -73,6 +73,8 @@ class GlibcAT213 < Formula
 
   keg_only :versioned_formula
 
+  disable! date: "2023-01-01", because: :versioned_formula
+
   depends_on GawkRequirement => :build
   depends_on "linux-headers@4.4" => :build
   depends_on MakeRequirement => :build
