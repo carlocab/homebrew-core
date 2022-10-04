@@ -42,9 +42,12 @@ class Makepkg < Formula
 
   test do
     (testpath/"PKGBUILD").write <<~EOS
+      pkgname=androidnetworktester
+      pkgname=test
       source=(https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/androidnetworktester/10kb.txt)
       pkgrel=0
       pkgver=0
+      md5sums=('e232a2683c04881e292d5f7617d6dc6f')
     EOS
     assert_match "md5sums=('e232a2683c0", pipe_output("#{bin}/makepkg -dg 2>&1")
   end
