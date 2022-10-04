@@ -33,7 +33,9 @@ class Makepkg < Formula
     ENV["XML_CATALOG_FILES"] = etc/"xml/catalog"
 
     system "meson", "setup", "build", "-Dmakepkg-template-dir=#{share}/makepkg-template",
-                                      "-Dsysconfdir=#{etc}", *std_meson_args
+                                      "-Dsysconfdir=#{etc}",
+                                      "-Dlocalstatedir=#{var}",
+                                      *std_meson_args
     system "meson", "compile", "-C", "build", "--verbose"
     system "meson", "install", "-C", "build"
   end
