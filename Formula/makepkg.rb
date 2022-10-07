@@ -14,12 +14,9 @@ class Makepkg < Formula
     sha256 high_sierra: "c8f2f6999669c56b5e40e2608ad1e0adfe2c8eb73f8cef959a229856d21da6ed"
   end
 
-  depends_on "asciidoc" => :build
-  depends_on "docbook-xsl" => :build
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python@3.10" => :build
   depends_on "bash"
   depends_on "fakeroot"
   depends_on "gettext"
@@ -27,6 +24,7 @@ class Makepkg < Formula
   depends_on "openssl@1.1"
 
   uses_from_macos "m4" => :build
+  uses_from_macos "python" => :build
   uses_from_macos "libxslt"
 
   on_macos do
