@@ -88,3 +88,18 @@ index 76b9d2aa..e904056a 100644
  if os.startswith('darwin')
    inodecmd = '/usr/bin/stat -f \'%i %N\''
    strip_binaries = ''
+diff --git a/lib/libalpm/util.c b/lib/libalpm/util.c
+index 299d287e..fa8ccb79 100644
+--- a/lib/libalpm/util.c
++++ b/lib/libalpm/util.c
+@@ -93,6 +93,10 @@ char *strsep(char **str, const char *delims)
+ }
+ #endif
+ 
++#ifndef MSG_NOSIGNAL
++#define MSG_NOSIGNAL 0
++#endif
++
+ int _alpm_makepath(const char *path)
+ {
+ 	return _alpm_makepath_mode(path, 0755);
