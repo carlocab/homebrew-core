@@ -29,6 +29,10 @@ class Makepkg < Formula
   uses_from_macos "m4" => :build
   uses_from_macos "libxslt"
 
+  on_macos do
+    depends_on "coreutils" => :test # for md5sum
+  end
+
   patch :DATA
 
   def install
