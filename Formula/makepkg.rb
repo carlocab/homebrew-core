@@ -32,10 +32,16 @@ class Makepkg < Formula
   def install
     ENV["XML_CATALOG_FILES"] = etc/"xml/catalog"
 
-    system "meson", "setup", "build", "-Dmakepkg-template-dir=#{share}/makepkg-template",
-                                      "-Dsysconfdir=#{etc}",
-                                      "-Dlocalstatedir=#{var}",
-                                      *std_meson_args
+    args = %W[
+      -Dmakepkg-template-dir=#{share}/makepkg-template
+      -Dsysconfdir=#{etc}
+      -Dlocalstatedir=#{var}
+      -Ddoc=disabled
+    ]
+
+    args << "-Di18n=false" if OS.mac?
+
+    system "meson", "setup", "build", *args, *std_meson_args
     system "meson", "compile", "-C", "build", "--verbose"
     system "meson", "install", "-C", "build"
   end
