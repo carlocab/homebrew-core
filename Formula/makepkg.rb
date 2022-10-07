@@ -29,6 +29,8 @@ class Makepkg < Formula
   uses_from_macos "m4" => :build
   uses_from_macos "libxslt"
 
+  patch :DATA
+
   def install
     ENV["XML_CATALOG_FILES"] = etc/"xml/catalog"
 
@@ -58,3 +60,27 @@ class Makepkg < Formula
     assert_match "md5sums=('e232a2683c0", pipe_output("#{bin}/makepkg -dg 2>&1")
   end
 end
+
+__END__
+diff --git a/meson.build b/meson.build
+index 76b9d2aa..e904056a 100644
+--- a/meson.build
++++ b/meson.build
+@@ -175,7 +175,8 @@ foreach type : [
+   endif
+ endforeach
+ 
+-if conf.has('HAVE_STRUCT_STATVFS_F_FLAG')
++os = host_machine.system()
++if conf.has('HAVE_STRUCT_STATVFS_F_FLAG') and not os.startswith('darwin')
+   conf.set('FSSTATSTYPE', 'struct statvfs')
+ elif conf.has('HAVE_STRUCT_STATFS_F_FLAGS')
+   conf.set('FSSTATSTYPE', 'struct statfs')
+@@ -235,7 +236,6 @@ if file_seccomp.enabled() or ( file_seccomp.auto() and filever.version_compare('
+   filecmd = 'file -S'
+ endif
+ 
+-os = host_machine.system()
+ if os.startswith('darwin')
+   inodecmd = '/usr/bin/stat -f \'%i %N\''
+   strip_binaries = ''
