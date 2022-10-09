@@ -19,7 +19,6 @@ class Makepkg < Formula
   depends_on "pkg-config" => :build
   depends_on "bash"
   depends_on "fakeroot"
-  depends_on "gettext"
   depends_on "libarchive"
   depends_on "openssl@1.1"
 
@@ -31,6 +30,12 @@ class Makepkg < Formula
     depends_on "coreutils" => :test # for md5sum
   end
 
+  on_linux do
+    depends_on "gettext"
+  end
+
+  # Submitted upstream: https://www.mail-archive.com/pacman-dev@lists.archlinux.org/msg00896.html
+  # Remove when these fixes have been merged.
   patch :DATA
 
   def install
