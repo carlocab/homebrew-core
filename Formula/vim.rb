@@ -32,11 +32,8 @@ class Vim < Formula
   depends_on "python@3.10"
   depends_on "ruby"
 
-  conflicts_with "ex-vi",
-    because: "vim and ex-vi both install bin/ex and bin/view"
-
-  conflicts_with "macvim",
-    because: "vim and macvim both install vi* binaries"
+  conflicts_with "ex-vi", because: "vim and ex-vi both install bin/ex and bin/view"
+  conflicts_with "macvim", because: "vim and macvim both install vi* binaries"
 
   def install
     ENV.prepend_path "PATH", Formula["python@3.10"].opt_libexec/"bin"
@@ -57,12 +54,12 @@ class Vim < Formula
                           "--mandir=#{man}",
                           "--enable-multibyte",
                           "--with-tlib=ncurses",
-                          "--with-compiledby=Homebrew",
+                          "--with-compiledby=#{tap.user}",
                           "--enable-cscope",
                           "--enable-terminal",
                           "--enable-perlinterp",
                           "--enable-rubyinterp",
-                          "--enable-python3interp",
+                          "--enable-python3interp#{"=dynamic" if OS.linux?}",
                           "--disable-gui",
                           "--without-x",
                           "--enable-luainterp",
