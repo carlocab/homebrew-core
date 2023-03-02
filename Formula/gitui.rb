@@ -16,12 +16,23 @@ class Gitui < Formula
     sha256 cellar: :any_skip_relocation, x86_64_linux:   "54b24c5b05ac59a33c54cf7fb310aae65a7dd92d9d707c01d2b6bd310b831cd2"
   end
 
+  depends_on "pkg-config" => :build
   depends_on "rust" => :build
-
+  depends_on "libgit2"
+  depends_on "openssl@1.1"
   uses_from_macos "zlib"
 
   def install
+    ENV["OPENSSL_NO_VENDOR"] = "1"
     system "cargo", "install", *std_cargo_args
+  end
+
+  def check_binary_linkage(binary, library)
+    binary.dynamically_linked_libraries.any? do |dll|
+      next false unless dll.start_with?(HOMEBREW_PREFIX.to_s)
+
+      File.realpath(dll) == File.realpath(library)
+    end
   end
 
   test do
@@ -52,6 +63,15 @@ class Gitui < Formula
     assert_match "Author: Stephan Dilly", screenlog
     assert_match "Date: 2020-06-15", screenlog
     assert_match "Sha: 9c2a31846c417d8775a346ceaf38e77b710d3aab", screenlog
+
+    [
+      Formula["libgit2"].opt_lib/shared_library("libgit2"),
+      Formula["openssl@1.1"].opt_lib/shared_library("libssl"),
+      Formula["openssl@1.1"].opt_lib/shared_library("libcrypto"),
+    ].each do |library|
+      assert check_binary_linkage(bin/"gitui", library),
+             "No linkage with #{library.basename}! Cargo is likely using a vendored version."
+    end
   ensure
     Process.kill("TERM", wait_thr.pid)
   end
