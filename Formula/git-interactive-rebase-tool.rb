@@ -21,9 +21,9 @@ class GitInteractiveRebaseTool < Formula
     sha256 cellar: :any_skip_relocation, x86_64_linux:   "a8f2a282a775c0141646641ac96e532e0e59a088a0a6a93dd0f877a39d94217e"
   end
 
+  depends_on "pkg-config" => :build
   depends_on "rust" => :build
-
-  uses_from_macos "zlib"
+  depends_on "libgit2"
 
   def install
     system "cargo", "install", *std_cargo_args
@@ -54,5 +54,13 @@ class GitInteractiveRebaseTool < Formula
 
     assert_equal 0, $CHILD_STATUS.exitstatus
     assert_equal expected_git_rebase_todo, todo_file.read
+
+    linkage_with_libgit2 = executable.dynamically_linked_libraries.any? do |dll|
+      next false unless dll.start_with?(HOMEBREW_PREFIX.to_s)
+
+      File.realpath(dll) == (Formula["libgit2"].opt_lib/shared_library("libgit2")).realpath.to_s
+    end
+
+    assert linkage_with_libgit2, "No linkage with libgit2! Cargo is likely using a vendored version."
   end
 end
