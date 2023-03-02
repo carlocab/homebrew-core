@@ -16,8 +16,12 @@ class Onefetch < Formula
     sha256 cellar: :any_skip_relocation, x86_64_linux:   "d0c0ed1915d92c86ee7c5ff6ac3dcb5074a1286c90a1418463ae1eeb31fbd09a"
   end
 
+  # `cmake` is used to build `zstd` and `zlib`.
+  # TODO: See if it is possible to use Homebrew dependencies instead.
   depends_on "cmake" => :build
+  depends_on "pkg-config" => :build
   depends_on "rust" => :build
+  depends_on "libgit2"
 
   def install
     system "cargo", "install", *std_cargo_args
@@ -33,7 +37,18 @@ class Onefetch < Formula
     system "git", "init"
     system "git", "config", "user.name", "BrewTestBot"
     system "git", "config", "user.email", "BrewTestBot@test.com"
-    system "echo \"puts 'Hello, world'\" > main.rb && git add main.rb && git commit -m \"First commit\""
+
+    (testpath/"main.rb").write "puts 'Hello, world'\n"
+    system "git", "add", "main.rb"
+    system "git", "commit", "-m", "First commit"
     assert_match("Ruby (100.0 %)", shell_output("#{bin}/onefetch").chomp)
+
+    linkage_with_libgit2 = (bin/"onefetch").dynamically_linked_libraries.any? do |dll|
+      next false unless dll.start_with?(HOMEBREW_PREFIX.to_s)
+
+      File.realpath(dll) == (Formula["libgit2"].opt_lib/shared_library("libgit2")).realpath.to_s
+    end
+
+    assert linkage_with_libgit2, "No linkage with libgit2! Cargo is likely using a vendored version."
   end
 end
