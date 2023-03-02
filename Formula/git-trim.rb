@@ -16,18 +16,25 @@ class GitTrim < Formula
     sha256 cellar: :any_skip_relocation, x86_64_linux:   "4663a90075b39aa34a60e0b5c097bb69b1820b9a72b1d47c54562fa9e08288de"
   end
 
+  depends_on "pkg-config" => :build
   depends_on "rust" => :build
+  depends_on "libgit2"
+  depends_on "libssh2"
   depends_on "openssl@3"
-
   uses_from_macos "zlib"
-
-  on_linux do
-    depends_on "pkg-config" => :build
-  end
 
   def install
     system "cargo", "install", *std_cargo_args
     man1.install "docs/git-trim.man" => "git-trim.1"
+  end
+
+  # TODO: add this method to `brew`
+  def check_binary_linkage(binary, library)
+    binary.dynamically_linked_libraries.any? do |dll|
+      next false unless dll.start_with?(HOMEBREW_PREFIX.to_s)
+
+      File.realpath(dll) == File.realpath(library)
+    end
   end
 
   test do
@@ -35,5 +42,15 @@ class GitTrim < Formula
     Dir.chdir("git-trim")
     system "git", "branch", "brew-test"
     assert_match "brew-test", shell_output("git trim")
+
+    [
+      Formula["libgit2"].opt_lib/shared_library("libgit2"),
+      Formula["libssh2"].opt_lib/shared_library("libssh2"),
+      Formula["openssl@3"].opt_lib/shared_library("libssl"),
+      Formula["openssl@3"].opt_lib/shared_library("libcrypto"),
+    ].each do |library|
+      assert check_binary_linkage(bin/"git-trim", library),
+             "No linkage with #{library.basename}! Cargo is likely using a vendored version."
+    end
   end
 end
