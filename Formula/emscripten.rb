@@ -29,18 +29,15 @@ class Emscripten < Formula
 
   depends_on "cmake" => :build
   depends_on "node"
-  depends_on "python@3.11"
-  depends_on "yuicompressor"
+  uses_from_macos "python", since: :catalina
 
   # OpenJDK is needed as a dependency on Linux and ARM64 for google-closure-compiler,
   # an emscripten dependency, because the native GraalVM image will not work.
-  on_macos do
-    on_arm do
-      depends_on "openjdk"
-    end
+  on_linux do
+    depends_on "openjdk"
   end
 
-  on_linux do
+  on_arm do
     depends_on "openjdk"
   end
 
@@ -73,13 +70,8 @@ class Emscripten < Formula
       pn.file? && pn.executable? && !(pn.extname == ".py" && pn.basename(".py").exist?)
     end.map(&:basename)
 
-    # All files from the repository are required as emscripten is a collection
-    # of scripts which need to be installed in the same layout as in the Git
-    # repository.
-    libexec.install buildpath.children
-
-    # Remove unneded files. See `tools/install.py`.
-    (libexec/"test/third_party").rmtree
+    system "python3", "tools/install.py", "--verbose", libexec
+    libexec.glob("*.bat").map(&:unlink) # Windows scripts
 
     # emscripten needs an llvm build with the following executables:
     # https://github.com/emscripten-core/emscripten/blob/#{version}/docs/packaging.md#dependencies
@@ -118,6 +110,7 @@ class Emscripten < Formula
         -DLLVM_ENABLE_ZSTD=OFF
         -DLLVM_ENABLE_Z3_SOLVER=OFF
       ]
+      args << "-DLLVM_ENABLE_LTO=Thin" if ENV.compiler.match?("clang") && build.bottle?
       args << "-DLLVM_ENABLE_LIBEDIT=OFF" if OS.linux?
 
       system "cmake", "-S", "llvm", "-B", "build",
@@ -128,9 +121,13 @@ class Emscripten < Formula
 
       # Remove unneeded tools. Taken from upstream `src/build.py`.
       unneeded = %w[
-        check cl cpp extef-mapping format func-mapping import-test offload-bundler refactor rename scan-deps
+        check cl cpp extef-mapping format func-mapping import-test linker-wrapper
+        offload-bundler offload-packager refactor rename repl scan-deps
       ].map { |suffix| "clang-#{suffix}" }
-      unneeded += %w[lld-link ld.lld ld64.lld llvm-lib ld64.lld.darwinnew ld64.lld.darwinold]
+      unneeded += %w[
+        diagtool git-clang-format hmap-tool ld.lld ld64.lld ld64.lld.darwinnew ld64.lld.darwinold lld-link
+      ]
+      unneeded += %w[cov ml lib pdbutil profdata rc].map { |suffix| "llvm-#{suffix}" }
       (libexec/"llvm/bin").glob("{#{unneeded.join(",")}}").map(&:unlink)
       (libexec/"llvm/lib").glob("libclang.{dylib,so.*}").map(&:unlink)
 
@@ -166,39 +163,27 @@ class Emscripten < Formula
       end
     end
 
-    # Add JAVA_HOME to env_script on ARM64 macOS and Linux, so that google-closure-compiler
-    # can find OpenJDK
-    emscript_env = { PYTHON: Formula["python@3.11"].opt_bin/"python3.11" }
-    emscript_env.merge! Language::Java.overridable_java_home_env if OS.linux? || Hardware::CPU.arm?
+    # Add JAVA_HOME to env_script on ARM64 macOS and Linux, so that google-closure-compiler can find OpenJDK
+    emscript_env = {}
+    uses_java = deps.any? { |dep| dep.name.match? "openjdk" }
+    emscript_env.merge! Language::Java.overridable_java_home_env if uses_java
 
     emscripts.each do |emscript|
       (bin/emscript).write_env_script libexec/emscript, emscript_env
     end
-  end
 
-  def post_install
-    return if File.exist?("#{Dir.home}/.emscripten")
-    return if (libexec/".emscripten").exist?
-
+    # `write_env_script` does not give execute permissions.
+    chmod "+x", bin/"emcc"
     system bin/"emcc", "--generate-config"
     inreplace libexec/".emscripten" do |s|
       s.change_make_var! "LLVM_ROOT", "'#{libexec}/llvm/bin'"
       s.change_make_var! "BINARYEN_ROOT", "'#{libexec}/binaryen'"
       s.change_make_var! "NODE_JS", "'#{Formula["node"].opt_bin}/node'"
-      s.change_make_var! "JAVA", "'#{Formula["openjdk"].opt_bin}/java'"
+      s.change_make_var! "JAVA", "'#{Formula["openjdk"].opt_bin}/java'" if uses_java
     end
-  end
 
-  def caveats
-    return unless File.exist?("#{Dir.home}/.emscripten")
-    return if (libexec/".emscripten").exist?
-
-    <<~EOS
-      You have a ~/.emscripten configuration file, so the default configuration
-      file was not generated. To generate the default configuration:
-        rm ~/.emscripten
-        brew postinstall emscripten
-    EOS
+    # We skip building the pre-built library cache.
+    # It takes too long, quadruples the bottle size, and causes audit failures.
   end
 
   test do
