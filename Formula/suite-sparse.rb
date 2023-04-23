@@ -11,6 +11,7 @@ class SuiteSparse < Formula
     "GPL-3.0-only",
     any_of: ["LGPL-3.0-or-later", "GPL-2.0-or-later"],
   ]
+  revision 1
 
   livecheck do
     url :stable
@@ -32,6 +33,10 @@ class SuiteSparse < Formula
   depends_on "openblas"
 
   uses_from_macos "m4"
+
+  on_macos do
+    depends_on "libomp"
+  end
 
   conflicts_with "mongoose", because: "suite-sparse vendors libmongoose.dylib"
 
@@ -60,5 +65,21 @@ class SuiteSparse < Formula
            "-L#{lib}", "-lsuitesparseconfig", "-lklu"
     assert_predicate testpath/"test", :exist?
     assert_match "x [0] = 1", shell_output("./test")
+
+    (testpath/"openmp_test.c").write <<~EOS
+      #include <SuiteSparse_config.h>
+      #include <unistd.h>
+      #include <stdio.h>
+      int main() {
+        double toc [2] ;
+        SuiteSparse_tic (toc) ;
+        sleep (1) ;
+        printf("%f", toc [0] + 1e-9 * toc [1]);
+      }
+    EOS
+
+    system ENV.cc, "openmp_test.c", "-I#{include}", "-L#{lib}",
+                   "-lsuitesparseconfig", "-o", "openmp_test"
+    refute_match "0.000000", shell_output("./openmp_test")
   end
 end
