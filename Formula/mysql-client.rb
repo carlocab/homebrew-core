@@ -4,6 +4,7 @@ class MysqlClient < Formula
   url "https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-boost-8.0.32.tar.gz"
   sha256 "1a83a2e1712a2d20b80369c45cecbfcc7be9178d4fc0e81ffba5c273ce947389"
   license "GPL-2.0-only" => { with: "Universal-FOSS-exception-1.0" }
+  revision 1
 
   livecheck do
     formula "mysql"
@@ -27,7 +28,7 @@ class MysqlClient < Formula
   depends_on "libfido2"
   # GCC is not supported either, so exclude for El Capitan.
   depends_on macos: :sierra if DevelopmentTools.clang_build_version < 900
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
   depends_on "zlib" # Zlib 1.2.12+
   depends_on "zstd"
 
