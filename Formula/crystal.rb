@@ -2,6 +2,7 @@ class Crystal < Formula
   desc "Fast and statically typed, compiled language with Ruby-like syntax"
   homepage "https://crystal-lang.org/"
   license "Apache-2.0"
+  revision 1
 
   stable do
     url "https://github.com/crystal-lang/crystal/archive/1.8.1.tar.gz"
@@ -43,7 +44,7 @@ class Crystal < Formula
   depends_on "libevent"
   depends_on "libyaml"
   depends_on "llvm@15"
-  depends_on "openssl@1.1" # std uses it but it's not linked
+  depends_on "openssl@3" # std uses it but it's not linked
   depends_on "pcre2"
   depends_on "pkg-config" # @[Link] will use pkg-config if available
 
@@ -148,7 +149,7 @@ class Crystal < Formula
     crystal_install_dir.install ".build/crystal"
     stdlib_install_dir.install "src"
 
-    pkg_config_path = "${PKG_CONFIG_PATH:+${PKG_CONFIG_PATH}:}#{Formula["openssl@1.1"].opt_lib}/pkgconfig"
+    pkg_config_path = "${PKG_CONFIG_PATH:+${PKG_CONFIG_PATH}:}#{Formula["openssl@3"].opt_lib}/pkgconfig"
     (bin/"crystal").write_env_script crystal_install_dir/"crystal", PKG_CONFIG_PATH: pkg_config_path
 
     bash_completion.install "etc/completion.bash" => "crystal"
