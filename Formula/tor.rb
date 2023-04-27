@@ -12,6 +12,7 @@ class Tor < Formula
     "MIT",
     "NCSA",
   ]
+  revision 1
 
   livecheck do
     url "https://dist.torproject.org/"
@@ -31,7 +32,7 @@ class Tor < Formula
   depends_on "pkg-config" => :build
   depends_on "libevent"
   depends_on "libscrypt"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
 
   uses_from_macos "zlib"
 
@@ -42,7 +43,7 @@ class Tor < Formula
       --prefix=#{prefix}
       --sysconfdir=#{etc}
       --localstatedir=#{var}
-      --with-openssl-dir=#{Formula["openssl@1.1"].opt_prefix}
+      --with-openssl-dir=#{Formula["openssl@3"].opt_prefix}
     ]
 
     system "./configure", *args
