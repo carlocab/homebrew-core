@@ -4,6 +4,7 @@ class Pgbouncer < Formula
   url "https://www.pgbouncer.org/downloads/files/1.18.0/pgbouncer-1.18.0.tar.gz"
   sha256 "9349c9e59f6f88156354f4f6af27cdb014a235b00ae184cbaa37688bd0df544c"
   license "ISC"
+  revision 1
 
   livecheck do
     url "https://www.pgbouncer.org/downloads/"
@@ -31,7 +32,7 @@ class Pgbouncer < Formula
 
   depends_on "pkg-config" => :build
   depends_on "libevent"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
 
   def install
     system "./autogen.sh" if build.head?
