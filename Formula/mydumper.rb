@@ -4,6 +4,7 @@ class Mydumper < Formula
   url "https://github.com/mydumper/mydumper/archive/v0.14.3-1.tar.gz"
   sha256 "aafb9c0914b720e175988a41d9c340271348e50e3a00556035a9c4afcf80c982"
   license "GPL-3.0-or-later"
+  revision 1
 
   livecheck do
     url :stable
@@ -26,7 +27,7 @@ class Mydumper < Formula
   depends_on "sphinx-doc" => :build
   depends_on "glib"
   depends_on "mysql-client"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
   depends_on "pcre"
 
   uses_from_macos "zlib"
