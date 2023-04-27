@@ -4,6 +4,7 @@ class Manticoresearch < Formula
   url "https://github.com/manticoresoftware/manticoresearch/archive/refs/tags/6.0.4.tar.gz"
   sha256 "5081f4f60152d041f14fdaf993f4cc67b127e76c970b58db9bc9532cd1325d8a"
   license "GPL-2.0-only"
+  revision 1
   version_scheme 1
   head "https://github.com/manticoresoftware/manticoresearch.git", branch: "master"
 
@@ -28,7 +29,7 @@ class Manticoresearch < Formula
   depends_on "icu4c"
   depends_on "libpq"
   depends_on "mysql-client"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
   depends_on "unixodbc"
   depends_on "zstd"
 
