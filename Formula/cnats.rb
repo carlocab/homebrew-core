@@ -4,6 +4,7 @@ class Cnats < Formula
   url "https://github.com/nats-io/nats.c/archive/v3.6.1.tar.gz"
   sha256 "4b60fd25bbb04dbc82ea09cd9e1df4f975f68e1b2e4293078ae14e01218a22bf"
   license "Apache-2.0"
+  revision 1
 
   bottle do
     sha256 cellar: :any,                 arm64_ventura:  "0206e5e928601734724c60181977137bcc6fa32b661d63f53da3300b5352334c"
@@ -18,7 +19,7 @@ class Cnats < Formula
   depends_on "cmake" => :build
   depends_on "libevent"
   depends_on "libuv"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
   depends_on "protobuf-c"
 
   def install
