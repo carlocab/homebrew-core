@@ -4,6 +4,7 @@ class Watchman < Formula
   url "https://github.com/facebook/watchman/archive/refs/tags/v2023.04.24.00.tar.gz"
   sha256 "46633adc0eec8870e0cde420cc5b17834e196bdd760c1c977efc6d1eeb104b13"
   license "MIT"
+  revision 1
   head "https://github.com/facebook/watchman.git", branch: "main"
 
   bottle do
@@ -23,6 +24,7 @@ class Watchman < Formula
   depends_on "cpptoml" => :build
   depends_on "googletest" => :build
   depends_on "pkg-config" => :build
+  depends_on "python@3.11" => :build
   depends_on "rust" => :build
   depends_on "boost"
   depends_on "edencommon"
@@ -32,9 +34,8 @@ class Watchman < Formula
   depends_on "gflags"
   depends_on "glog"
   depends_on "libevent"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
   depends_on "pcre2"
-  depends_on "python@3.11"
 
   fails_with gcc: "5"
 
