@@ -5,6 +5,7 @@ class Wownero < Formula
       tag:      "v0.11.0.1",
       revision: "a21819cc22587e16af00e2c3d8f70156c11310a0"
   license "BSD-3-Clause"
+  revision 1
 
   # The `strategy` code below can be removed if/when this software exceeds
   # version 10.0.0. Until then, it's used to omit a malformed tag that would
@@ -39,7 +40,7 @@ class Wownero < Formula
   depends_on "hidapi"
   depends_on "libsodium"
   depends_on "libusb"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
   depends_on "protobuf"
   depends_on "readline"
   depends_on "unbound"
