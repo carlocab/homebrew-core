@@ -4,7 +4,7 @@ class Spdylay < Formula
   url "https://github.com/tatsuhiro-t/spdylay/archive/v1.4.0.tar.gz"
   sha256 "31ed26253943b9d898b936945a1c68c48c3e0974b146cef7382320a97d8f0fa0"
   license "MIT"
-  revision 3
+  revision 4
 
   bottle do
     sha256 cellar: :any,                 arm64_monterey: "d4a310199a7b40dea729051d4dbc6fd44480d29d2ef619f6ad3a0d7d86e9762e"
@@ -26,7 +26,7 @@ class Spdylay < Formula
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
   depends_on "libevent"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
 
   uses_from_macos "xz"
   uses_from_macos "zlib"
