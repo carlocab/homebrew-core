@@ -5,7 +5,7 @@ class TelegramCli < Formula
       tag:      "1.3.1",
       revision: "5935c97ed05b90015418b5208b7beeca15a6043c"
   license "GPL-2.0"
-  revision 4
+  revision 5
   head "https://github.com/vysheng/tg.git", branch: "master"
 
   bottle do
@@ -28,7 +28,7 @@ class TelegramCli < Formula
   depends_on "jansson"
   depends_on "libconfig"
   depends_on "libevent"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
   depends_on "readline"
 
   uses_from_macos "zlib"
