@@ -4,7 +4,7 @@ class CrystalIcr < Formula
   url "https://github.com/crystal-community/icr/archive/v0.9.0.tar.gz"
   sha256 "2530293e94b60d69919a79b49e83270f1462058499ad37a762233df8d6e5992c"
   license "MIT"
-  revision 1
+  revision 2
 
   bottle do
     sha256 arm64_ventura:  "b58c044412b4da53700db5e4626eb6ddb89d311e85b115a2f9d0a7f5d1f39006"
@@ -19,7 +19,7 @@ class CrystalIcr < Formula
   depends_on "crystal"
   depends_on "libevent"
   depends_on "libyaml"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
   depends_on "readline"
 
   def install
