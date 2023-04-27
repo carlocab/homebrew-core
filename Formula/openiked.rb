@@ -5,6 +5,7 @@ class Openiked < Formula
   mirror "https://mirror.edgecast.com/pub/OpenBSD/OpenIKED/openiked-7.2.tar.gz"
   sha256 "55dc270bc40a121f855d949a25a5ffaeb11e7607e8198ec52160ef54b6946845"
   license "ISC"
+  revision 1
 
   bottle do
     sha256                               arm64_ventura:  "fa1992fefc726490f3f1d4c39fab38b58a166ef92f057568d7a12b301e69b2a0"
@@ -18,7 +19,7 @@ class Openiked < Formula
 
   depends_on "cmake" => :build
   depends_on "libevent"
-  depends_on "openssl@1.1"  # openssl@3 conflicts with libevent
+  depends_on "openssl@3"  # openssl@3 conflicts with libevent
 
   uses_from_macos "bison"
 
