@@ -4,6 +4,7 @@ class Folly < Formula
   url "https://github.com/facebook/folly/archive/refs/tags/v2023.04.24.00.tar.gz"
   sha256 "3d3c7675d9d2699bd89f6d6fe1d2d4647bcb505f86c8d94b2a99504e01627ff7"
   license "Apache-2.0"
+  revision 1
   head "https://github.com/facebook/folly.git", branch: "main"
 
   bottle do
@@ -25,7 +26,7 @@ class Folly < Formula
   depends_on "glog"
   depends_on "libevent"
   depends_on "lz4"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
   depends_on "snappy"
   depends_on "xz"
   depends_on "zstd"
