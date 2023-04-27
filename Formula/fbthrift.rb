@@ -4,6 +4,7 @@ class Fbthrift < Formula
   url "https://github.com/facebook/fbthrift/archive/refs/tags/v2023.04.24.00.tar.gz"
   sha256 "5fd12c95ebe81babdcea56e0de58d76b885fbf244e1c640a25be259fe7734e69"
   license "Apache-2.0"
+  revision 1
   head "https://github.com/facebook/fbthrift.git", branch: "main"
 
   bottle do
@@ -24,7 +25,7 @@ class Fbthrift < Formula
   depends_on "folly"
   depends_on "gflags"
   depends_on "glog"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
   depends_on "wangle"
   depends_on "zstd"
 
