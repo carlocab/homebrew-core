@@ -4,6 +4,7 @@ class Libwebsockets < Formula
   url "https://github.com/warmcat/libwebsockets/archive/v4.3.2.tar.gz"
   sha256 "6a85a1bccf25acc7e8e5383e4934c9b32a102880d1e4c37c70b27ae2a42406e1"
   license "MIT"
+  revision 1
   head "https://github.com/warmcat/libwebsockets.git", branch: "main"
 
   livecheck do
@@ -25,7 +26,7 @@ class Libwebsockets < Formula
   depends_on "cmake" => :build
   depends_on "libevent"
   depends_on "libuv"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
 
   uses_from_macos "zlib"
 
@@ -58,7 +59,7 @@ class Libwebsockets < Formula
         return 0;
       }
     EOS
-    system ENV.cc, "test.c", "-I#{Formula["openssl@1.1"].opt_prefix}/include",
+    system ENV.cc, "test.c", "-I#{Formula["openssl@3"].opt_prefix}/include",
                    "-L#{lib}", "-lwebsockets", "-o", "test"
     system "./test"
   end
