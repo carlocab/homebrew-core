@@ -4,6 +4,7 @@ class Fizz < Formula
   url "https://github.com/facebookincubator/fizz/releases/download/v2023.04.24.00/fizz-v2023.04.24.00.tar.gz"
   sha256 "a66ed96f623efc42cd5b96f7d1749a2ac2c761a2d1b84ec228f72579cc420c03"
   license "BSD-3-Clause"
+  revision 1
   head "https://github.com/facebookincubator/fizz.git", branch: "main"
 
   bottle do
@@ -26,7 +27,7 @@ class Fizz < Formula
   depends_on "libevent"
   depends_on "libsodium"
   depends_on "lz4"
-  depends_on "openssl@1.1"
+  depends_on "openssl@3"
   depends_on "snappy"
   depends_on "zstd"
 
@@ -54,14 +55,14 @@ class Fizz < Formula
     EOS
     system ENV.cxx, "-std=c++14", "test.cpp", "-o", "test",
                     "-I#{include}",
-                    "-I#{Formula["openssl@1.1"].opt_include}",
+                    "-I#{Formula["openssl@3"].opt_include}",
                     "-L#{lib}", "-lfizz",
                     "-L#{Formula["folly"].opt_lib}", "-lfolly",
                     "-L#{Formula["gflags"].opt_lib}", "-lgflags",
                     "-L#{Formula["glog"].opt_lib}", "-lglog",
                     "-L#{Formula["libevent"].opt_lib}", "-levent",
                     "-L#{Formula["libsodium"].opt_lib}", "-lsodium",
-                    "-L#{Formula["openssl@1.1"].opt_lib}", "-lcrypto", "-lssl"
+                    "-L#{Formula["openssl@3"].opt_lib}", "-lcrypto", "-lssl"
     assert_match "TLS", shell_output("./test")
   end
 end
