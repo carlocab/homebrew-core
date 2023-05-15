@@ -29,6 +29,7 @@ class Sile < Formula
   depends_on "harfbuzz"
   depends_on "icu4c"
   depends_on "libpng"
+  depends_on "lpeg"
   depends_on "lua"
   depends_on "luarocks"
   depends_on "openssl@3"
@@ -40,11 +41,6 @@ class Sile < Formula
   resource "linenoise" do
     url "https://luarocks.org/manifests/hoelzro/linenoise-0.9-1.rockspec"
     sha256 "e4f942e0079092993832cf6e78a1f019dad5d8d659b9506692d718d0c0432c72"
-  end
-
-  resource "lpeg" do
-    url "https://luarocks.org/manifests/gvvaughan/lpeg-1.0.2-1.src.rock"
-    sha256 "e0d0d687897f06588558168eeb1902ac41a11edd1b58f1aa61b99d0ea0abbfbc"
   end
 
   # depends on lpeg
@@ -120,15 +116,15 @@ class Sile < Formula
     sha256 "ea915c689dfce2a7ef5551eb3c09d4620bae60a51c20d48d85c14b69bf3f28ba"
   end
 
-  # depends on luafilesystem, penlight
+  # depends on penlight
   resource "cassowary" do
     url "https://luarocks.org/manifests/simoncozens/cassowary-2.3.2-1.src.rock"
     sha256 "2d3c3954eeb8b5da1d7b1b56c209ed3ae11d221220967c159f543341917ce726"
   end
 
   resource "luautf8" do
-    url "https://luarocks.org/manifests/xavier-wang/luautf8-0.1.5-1.src.rock"
-    sha256 "33ce04dad817a9d9b05ea5e14663aa4b83da6f8a82dea594e556693fd0b8e42a"
+    url "https://luarocks.org/manifests/xavier-wang/luautf8-0.1.5-2.src.rock"
+    sha256 "68bd8e3c3e20f98fceb9e20d5a7a50168202c22eb45b87eff3247a0608f465ae"
   end
 
   resource "vstruct" do
@@ -142,13 +138,18 @@ class Sile < Formula
     luapath = libexec/"vendor"
 
     paths = %W[
+      #{Formula["lpeg"].opt_share}/lua/#{luaversion}/?.lua
       #{luapath}/share/lua/#{luaversion}/?.lua
       #{luapath}/share/lua/#{luaversion}/?/init.lua
       #{luapath}/share/lua/#{luaversion}/lxp/?.lua
     ]
+    cpaths = %W[
+      #{Formula["lpeg"].opt_lib}/lua/#{luaversion}/?.so
+      #{luapath}/lib/lua/#{luaversion}/?.so
+    ]
 
     ENV["LUA_PATH"] = paths.join(";")
-    ENV["LUA_CPATH"] = "#{luapath}/lib/lua/#{luaversion}/?.so"
+    ENV["LUA_CPATH"] = cpaths.join(";")
 
     ENV.prepend "CPPFLAGS", "-I#{lua.opt_include}/lua"
     ENV.prepend "LDFLAGS", "-L#{lua.opt_lib}"
@@ -165,6 +166,7 @@ class Sile < Formula
       OPENSSL_DIR=#{Formula["openssl@3"].opt_prefix}
       --tree=#{luapath}
       --lua-dir=#{lua.opt_prefix}
+      --deps-mode=none
     ]
 
     resources.each do |r|
@@ -188,13 +190,13 @@ class Sile < Formula
     system "make"
     system "make", "install"
 
-    env = {
+    luaenv = {
       LUA_PATH:  "#{ENV["LUA_PATH"]};;",
       LUA_CPATH: "#{ENV["LUA_CPATH"]};;",
     }
 
     (libexec/"bin").install bin/"sile"
-    (bin/"sile").write_env_script libexec/"bin/sile", env
+    (bin/"sile").write_env_script libexec/"bin/sile", luaenv
   end
 
   def caveats
