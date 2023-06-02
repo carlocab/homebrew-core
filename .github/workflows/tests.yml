@@ -37,6 +37,30 @@ jobs:
           name: pull-number
           path: number
 
+  cache:
+    if: always() && github.repository_owner == 'Homebrew' && github.event_name == 'push'
+    strategy:
+      matrix:
+        version: [11, 12, 13]
+      fail-fast: false
+    runs-on: macos-${{ matrix.version }}
+    steps:
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Cache Homebrew Bundler RubyGems
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+          key: ${{ matrix.version }}-x86_64-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+          restore-keys: ${{ matrix.version }}-x86_64-rubygems-
+
+      - name: Install Homebrew Bundler RubyGems
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: brew install-bundler-gems
+
   tap_syntax:
     if: github.repository_owner == 'Homebrew'
     runs-on: ubuntu-22.04
