@@ -27,4 +27,4 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Cache Homebrew Gems
-        uses: Homebrew/actions/populate-gems-cache@master
+        uses: Homebrew/actions/populate-gems-cache@populate-gems-cache
