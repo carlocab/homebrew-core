@@ -51,13 +51,18 @@ class Mapserver < Formula
     sha256 "be4e0c35a29210b08d99adb662c6a72a39e969ec5dfdb122bfda1736df777f0b"
   end
 
+  # Fix mapscript Python bindings RPATH
+  patch :DATA
+
   def install
     # Install within our sandbox
     inreplace "mapscript/python/CMakeLists.txt", "${Python_LIBRARIES}", "-Wl,-undefined,dynamic_lookup" if OS.mac?
 
+    mapscript_site_packages = prefix/Language::Python.site_packages(python3)/"mapscript"
     system "cmake", "-S", ".", "-B", "build",
                     "-DCMAKE_INSTALL_RPATH=#{rpath}",
                     "-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF",
+                    "-DMAPSCRIPT_INSTALL_RPATH=#{rpath(source: mapscript_site_packages)}",
                     "-DWITH_CLIENT_WFS=ON",
                     "-DWITH_CLIENT_WMS=ON",
                     "-DWITH_CURL=ON",
@@ -78,8 +83,6 @@ class Mapserver < Formula
     system "cmake", "--build", "build"
     system "cmake", "--install", "build"
 
-    mapscript_site_packages = prefix/Language::Python.site_packages(python3)/"mapscript"
-    ENV.append "LDFLAGS", rpath(source: mapscript_site_packages)
     cd "build/mapscript/python" do
       system python3, *Language::Python.setup_install_args(prefix, python3)
     end
@@ -90,3 +93,29 @@ class Mapserver < Formula
     system python3, "-c", "import mapscript"
   end
 end
+
+__END__
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 25b66be47..7d404f721 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -250,6 +250,7 @@ if(LINK_STATIC_LIBMAPSERVER)
+ else(LINK_STATIC_LIBMAPSERVER)
+   set(BUILD_DYNAMIC 1)
+   set(MAPSERVER_LIBMAPSERVER mapserver)
++  set(MAPSCRIPT_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}" CACHE STRING "INSTALL_RPATH for mapscript support")
+ endif(LINK_STATIC_LIBMAPSERVER)
+ 
+ set(agg_SOURCES
+diff --git a/mapscript/python/CMakeLists.txt b/mapscript/python/CMakeLists.txt
+index 9770cdd1c..2016538b1 100644
+--- a/mapscript/python/CMakeLists.txt
++++ b/mapscript/python/CMakeLists.txt
+@@ -27,6 +27,7 @@ else ()
+ endif ()
+ 
+ swig_link_libraries(pythonmapscript ${Python_LIBRARIES} ${MAPSERVER_LIBMAPSERVER})
++set_target_properties(pythonmapscript PROPERTIES INSTALL_RPATH ${MAPSCRIPT_INSTALL_RPATH})
+ 
+ set_target_properties(${SWIG_MODULE_pythonmapscript_REAL_NAME} PROPERTIES PREFIX "")
+ set_target_properties(${SWIG_MODULE_pythonmapscript_REAL_NAME} PROPERTIES OUTPUT_NAME _mapscript)
