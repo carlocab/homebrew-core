@@ -44,12 +44,20 @@ class Mapserver < Formula
     "python3.11"
   end
 
+  # Respect configuration of `CMAKE_INSTALL_RPATH`
+  # https://github.com/MapServer/MapServer/pull/6902
+  patch do
+    url "https://github.com/MapServer/MapServer/commit/6fbfecc81d4eaca193edad97c4c0b64baf308554.patch?full_index=1"
+    sha256 "be4e0c35a29210b08d99adb662c6a72a39e969ec5dfdb122bfda1736df777f0b"
+  end
+
   def install
     # Install within our sandbox
     inreplace "mapscript/python/CMakeLists.txt", "${Python_LIBRARIES}", "-Wl,-undefined,dynamic_lookup" if OS.mac?
 
-    system "cmake", "-S", ".", "-B", "build", *std_cmake_args,
+    system "cmake", "-S", ".", "-B", "build",
                     "-DCMAKE_INSTALL_RPATH=#{rpath}",
+                    "-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF",
                     "-DWITH_CLIENT_WFS=ON",
                     "-DWITH_CLIENT_WMS=ON",
                     "-DWITH_CURL=ON",
@@ -65,10 +73,13 @@ class Mapserver < Formula
                     "-DWITH_SOS=ON",
                     "-DWITH_WFS=ON",
                     "-DPYTHON_EXECUTABLE=#{which(python3)}",
-                    "-DPHP_EXTENSION_DIR=#{lib}/php/extensions"
+                    "-DPHP_EXTENSION_DIR=#{lib}/php/extensions",
+                    *std_cmake_args
     system "cmake", "--build", "build"
     system "cmake", "--install", "build"
 
+    mapscript_site_packages = prefix/Language::Python.site_packages(python3)/"mapscript"
+    ENV.append "LDFLAGS", rpath(source: mapscript_site_packages)
     cd "build/mapscript/python" do
       system python3, *Language::Python.setup_install_args(prefix, python3)
     end
