@@ -116,6 +116,9 @@ class OpencvAT3 < Formula
       args << "-DENABLE_SSE41=OFF" << "-DENABLE_SSE42=OFF" unless MacOS.version.requires_sse42?
     end
 
+    # error: ‘...’ has virtual functions and accessible non-virtual destructor [-Werror=non-virtual-dtor]
+    ENV.append_to_cflags "-Wno-non-virtual-dtor" if OS.linux?
+
     system "cmake", "-S", ".", "-B", "build_shared", *args
     inreplace "build_shared/modules/core/version_string.inc", "#{Superenv.shims_path}/", ""
     system "cmake", "--build", "build_shared"
