@@ -4,6 +4,7 @@ class Pinocchio < Formula
   url "https://github.com/stack-of-tasks/pinocchio/releases/download/v2.6.18/pinocchio-2.6.18.tar.gz"
   sha256 "c497db0c7f31e7302d73efdcdc5f2834c76d25944b53d70a909991f4a2052c08"
   license "BSD-2-Clause"
+  revision 1
   head "https://github.com/stack-of-tasks/pinocchio.git", branch: "master"
 
   livecheck do
@@ -23,6 +24,7 @@ class Pinocchio < Formula
 
   depends_on "cmake" => :build
   depends_on "doxygen" => :build
+  depends_on "pkg-config" => :build
   depends_on "boost"
   depends_on "eigen"
   depends_on "eigenpy"
@@ -40,6 +42,9 @@ class Pinocchio < Formula
       system "git", "pull", "--unshallow", "--tags"
     end
 
+    # Our `boost` requires C++14.
+    # TODO: Upstream a fix.
+    inreplace "CMakeLists.txt", "CMAKE_CXX_STANDARD 11", "CMAKE_CXX_STANDARD 14"
     system "cmake", "-S", ".", "-B", "build",
                     "-DPYTHON_EXECUTABLE=#{which(python3)}",
                     "-DBUILD_UNIT_TESTS=OFF",
