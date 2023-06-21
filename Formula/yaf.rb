@@ -4,6 +4,7 @@ class Yaf < Formula
   url "https://tools.netsa.cert.org/releases/yaf-2.13.0.tar.gz"
   sha256 "a4c0a7cec4b3e78cde7a9bcd051e3e6bcb88c671494745ac506f1843756a61a3"
   license "GPL-2.0-only"
+  revision 1
 
   # NOTE: This should be updated to check the main `/yaf/download.html`
   # page when it links to a stable version again in the future.
@@ -27,6 +28,7 @@ class Yaf < Formula
   depends_on "glib"
   depends_on "libfixbuf"
   depends_on "libtool"
+  depends_on "openssl@3"
   depends_on "pcre"
 
   uses_from_macos "libpcap"
