@@ -17,8 +17,6 @@ class IsaL < Formula
   depends_on "automake" => :build
   depends_on "libtool" => :build
   depends_on "nasm" => :build
-  # https://github.com/intel/isa-l/pull/164
-  depends_on arch: :x86_64
 
   def install
     system "./autogen.sh"
