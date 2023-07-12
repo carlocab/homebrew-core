@@ -1,3 +1,6 @@
+# macOS provides LDAP.framework, but this is deprecated and documented as "Do not use."
+# https://github.com/Homebrew/homebrew-core/pull/58274
+# https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/OSX_Technology_Overview/SystemFrameworks/SystemFrameworks.html
 class Openldap < Formula
   desc "Open source suite of directory software"
   homepage "https://www.openldap.org/software/"
@@ -21,8 +24,6 @@ class Openldap < Formula
     sha256 big_sur:        "bf6ab39a45e0d9392f927c8fd935f94968edbf7be1385afb1ab44d4cac3bc5d9"
     sha256 x86_64_linux:   "acc12b445557a8b4c5872e7fae4653e36ccc74b618c9bd82eb40f28c7618e0b6"
   end
-
-  keg_only :provided_by_macos
 
   depends_on "openssl@3"
 
