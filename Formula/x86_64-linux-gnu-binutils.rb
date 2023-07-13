@@ -20,6 +20,7 @@ class X8664LinuxGnuBinutils < Formula
     sha256 x86_64_linux:   "93bf432220d03a774dab1fe551d315b6734215c116864bbf5bc84d0e92c6fc55"
   end
 
+  uses_from_macos "xz" => :test
   uses_from_macos "zlib"
 
   on_system :linux, macos: :ventura_or_newer do
@@ -30,9 +31,12 @@ class X8664LinuxGnuBinutils < Formula
     keg_only "it conflicts with `binutils`"
   end
 
-  resource "homebrew-sysroot" do
-    url "https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/2028cdaf24259d23adcff95393b8cc4f0eef714b/debian_bullseye_amd64_sysroot.tar.xz"
-    sha256 "1be60e7c456abc590a613c64fab4eac7632c81ec6f22734a61b53669a4407346"
+  on_intel do
+    depends_on "blink" => :test # Not needed on Linux, but it's simpler to avoid platform-specific logic
+  end
+
+  def target
+    "x86_64-linux-gnu"
   end
 
   def install
@@ -41,7 +45,6 @@ class X8664LinuxGnuBinutils < Formula
     # Avoid build failure: https://sourceware.org/bugzilla/show_bug.cgi?id=23424
     ENV.append "CXXFLAGS", "-Wno-c++11-narrowing"
 
-    target = "x86_64-linux-gnu"
     system "./configure", "--disable-debug",
                           "--disable-dependency-tracking",
                           "--enable-deterministic-archives",
@@ -61,23 +64,38 @@ class X8664LinuxGnuBinutils < Formula
   end
 
   test do
-    assert_match "f()", shell_output("#{bin}/x86_64-linux-gnu-c++filt _Z1fv")
-    return if OS.linux?
+    assert_match "f()", shell_output("#{bin/target}-c++filt _Z1fv")
+
+    resource "homebrew-sysroot" do
+      url "https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/2028cdaf24259d23adcff95393b8cc4f0eef714b/debian_bullseye_amd64_sysroot.tar.xz"
+      sha256 "1be60e7c456abc590a613c64fab4eac7632c81ec6f22734a61b53669a4407346"
+    end
 
     (testpath/"sysroot").install resource("homebrew-sysroot")
     (testpath/"hello.c").write <<~EOS
       #include <stdio.h>
-      int main() { printf("hello!\\n"); }
+      int main() { printf("hello!"); }
     EOS
 
-    ENV.remove_macosxsdk
-    system ENV.cc, "-v", "--target=x86_64-pc-linux-gnu", "--sysroot=#{testpath}/sysroot", "-c", "hello.c"
-    assert_match "main", shell_output("#{bin}/x86_64-linux-gnu-nm hello.o")
+    ENV.remove_macosxsdk if OS.mac?
+    system ENV.cc, "-v", "--target=#{target}", "--sysroot=#{testpath}/sysroot", "-c", "hello.c"
+    assert_match "main", shell_output("#{bin/target}-nm hello.o")
 
-    system ENV.cc, "-v", "--target=x86_64-pc-linux-gnu", "--sysroot=#{testpath}/sysroot",
-                   "-fuse-ld=#{bin}/x86_64-linux-gnu-ld", "hello.o", "-o", "hello"
+    linker_flag = case ENV.compiler
+    when /^gcc(-\d+)?$/ then "-B#{prefix/target}/bin"
+    when :clang, /^gcc-\d{2,}$/ then "-fuse-ld=#{bin/target}-ld"
+    else odie "unexpected compiler"
+    end
+
+    system ENV.cc, "-v", "--target=#{target}", "--sysroot=#{testpath}/sysroot",
+                   linker_flag, "hello.o", "-o", "hello"
     assert_match "ELF", shell_output("file ./hello")
-    assert_match "libc.so", shell_output("#{bin}/x86_64-linux-gnu-readelf -d ./hello")
-    system bin/"x86_64-linux-gnu-strip", "./hello"
+    assert_match "libc.so", shell_output("#{bin/target}-readelf -d ./hello")
+    system bin/"#{target}-strip", "./hello"
+
+    return if Hardware::CPU.arm? # Test below fails on ARM.
+
+    ENV["BLINK_PREFIX"] = testpath/"sysroot"
+    assert_equal "hello!", shell_output("blink ./hello")
   end
 end
